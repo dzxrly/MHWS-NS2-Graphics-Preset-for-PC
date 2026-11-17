@@ -115,6 +115,7 @@ jobs:
             gh release upload "${RELEASE_TAG}" output/*.zip output/output.log --clobber
           else
             gh release create "${RELEASE_TAG}" output/*.zip output/output.log \
+              --latest \
               --title "${RELEASE_TITLE}" \
               --notes "Enables the Nintendo Switch 2 graphics preset in Monster Hunter Wilds on PC. Includes Dock and Handheld packages."
           fi
