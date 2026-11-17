@@ -56,6 +56,8 @@ Dock 的 `Default_Fast` 使用 DRS 11（`TARGET_40_LOW`），阴影质量从 3 �
 
 PC 的阴影距离应用函数（RVA `0x758be50`）按菜单索引读取 `_Value`，可直接写入 Dock 的 `NEAREST` 或 Handheld 的 `NEAREST_H`。体积雾应用函数（RVA `0x40ef3a0`）直接写入目标体积纹理尺寸、阴影混合和材质降噪三项。网格菜单（RVA `0x6340860`）把同一个 `_Value` 写入网格和 meshlet 的最低 LOD，两种模式都设为 `0`。这些字段随后仍经过 PC 的场景与渲染限制，例如体积雾的独立尺寸上限。
 
+渲染管理器的 `lateUpdate`（RVA `0x8a9e3a0`）在实际间接光档位变化时调用 `updateGIQuality`（RVA `0x8a9ebe0`），按档位从 `_GIQualitySettings` 查询并应用参数。两种模式都选 `LOW`，因此还需同步该行的点云最低细节层级、探针光线数量、更新分组、累积权重和累积帧数。原版根表与预设记录之间的差值见[参数表](settings-tables.md#阴影距离与全局光照)。
+
 普通和过场预设由 `applyGraphicsPresetSetting` 与 `onGraphicsPresetSettingsTypeChanged`（RVA `0x5d1fae0`）排队，经 `updateRequests`（RVA `0x5d1eb00`）提交。直接布尔项如屏幕空间反射、皮肤次表面散射和景深由预设表选择开关。对多个条目共享同一实际载荷的选项，部分菜单回读会选择首个匹配标签。
 
 启动时 `initializeGraphicsSettingPC`（RVA `0x608a6e0`）会读取 Windows 本地设置。`doReadConfig`（RVA `0x7bdc450`）能直接恢复已保存的雾、反射、运动模糊和阴影值。普通预设只提交发生变化的菜单项。检查预设初始化效果时，应以备份并重建的 PC 配置为起点，并分别验证从已有配置升级时的行为。

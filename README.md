@@ -32,7 +32,9 @@ Dock 的原生 `Default` 开启屏幕空间反射和皮肤次表面散射。Hand
 
 从带 Lua 的旧版升级时，先卸载旧包，并移除游戏目录里旧版的 `reframework/autorun/MHWS_NSW2onPC.lua`。安装后可在游戏菜单选择普通或过场画质预设。多个菜单标签指向同一画质参数时，游戏回读可能显示该组第一个匹配的标签。
 
-Windows 会从已有的 `config.ini` 读取部分原始画质字段，切换菜单预设也只会提交发生变化的选项。若从旧版升级或切换主机、掌机后仍看到旧设置，可先退出游戏，将 `config.ini` 备份并移出游戏目录，再启动游戏生成新配置。原有的分辨率等 PC 选项需要重新设置。
+五档 PC 预设共用同一组画质值。掌机版可以用较短的动态阴影距离、`54 × 30 × 32` 的体积雾网格和关闭屏幕空间反射来核对。掌机原生预设的阴影质量仍为 `HIGH`，输出分辨率和升频后端由 PC 设置决定。
+
+Windows 会从已有的 `config.ini` 恢复阴影细节层级偏移、运动模糊等字段。切换总预设只会提交发生变化的菜单选项。若从旧版升级或切换主机、掌机后仍看到旧设置，可先退出游戏，将 `config.ini` 备份并移出游戏目录，再启动游戏生成新配置。原有的分辨率等 PC 选项需要重新设置。
 
 每份压缩包包含以下文件。
 
@@ -117,6 +119,8 @@ python tools/build_data.py download
 
 根据 `(平台, 用途)` 选择 `(NSW2, Default)` 或 `(NSW2_HANDHELD, Default)`，复制渲染字段、普通与实验光追子对象及五条关卡地形距离。保留每个 PC 用途的身份和 `PC_GRAPHICS_FIELDS`，以原始值作为各设备设置的起点。
 
+渲染管理器还会按间接光档位读取根表 `_GIQualitySettings`。将对应档位中的点云最低细节层级、探针光线数量、更新分组及累积参数同步到所选 NSW2 预设。
+
 ### `OptionGraphicsData.user.3`
 
 源文件为 `data/natives/STM/GameDesign/Common/Option/OptionGraphicsData.user.3`。根类型为 `OptionGraphicsData`，由 `utils.patches.patch_option_graphics()` 处理。
@@ -147,7 +151,7 @@ python tools/build_data.py download
 
 ## 修改与验证不变量
 
-- 两种模式分别取原始的 NSW2 `Default` 和 `NSW2_HANDHELD` `Default`。12 条 PC 用途保留各自身份，其他平台和共享根表保留原始值。
+- 两种模式分别取原始的 NSW2 `Default` 和 `NSW2_HANDHELD` `Default`。12 条 PC 用途保留各自身份。共享的间接光表只修改所用档位的五个点云与探针字段。
 - 过场及普通菜单的五档共用同一套菜单载荷。每张表的五个 `_Quality` 仍各自唯一。
 - 草地按 `FAR` 匹配一条通用记录和三条关卡记录。沙雪水按关卡身份匹配五条地形距离。
 - 回封后核对所有 `OptionGraphicsData._Option` 标识，逐项与源文件一致。

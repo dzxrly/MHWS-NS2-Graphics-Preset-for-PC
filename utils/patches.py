@@ -86,6 +86,25 @@ def patch_graphics_preset(
                 )
             target["fields"] = deepcopy(source["fields"])
         row.update(deepcopy(payload))
+
+    # RenderingManager lateUpdate applies these values from the active GI tier.
+    gi_quality = next(
+        row
+        for row in iter_ref_fields(data=data, refs=root["fields"]["_GIQualitySettings"])
+        if enum_int(value=row["_Type"]) == enum_int(value=profile["_GIQuality"])
+    )
+    for name in (
+        "_GIPointCloudMinLod",
+        "_ProbeTraceRayCount",
+        "_ProbeTraceAccumulationWeight",
+        "_ProbeTraceRayAccumulationFrame",
+    ):
+        gi_quality[name] = profile[name]
+    gi_quality["_ProbeTraceUpdateDivisionType"] = enums.label(
+        enum_type="via.render.GIPointCloudManager.ProbeTraceUpdateDivisionType",
+        value=profile["_ProbeTraceUpdateDivisionType"],
+    )
+
     if stages:
         before = min(
             ref_id(ref=ref)
