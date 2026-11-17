@@ -33,8 +33,8 @@
 
 ## 安裝
 
-1. 關閉遊戲，下載想使用的預設壓縮檔。
-2. 解壓縮後，將 `natives` 資料夾複製到 `MonsterHunterWilds.exe` 所在的遊戲目錄。首次安裝會新增這些檔案，更新時則覆蓋本模組舊版的檔案。
+1. 底座版與掌機版擇一下載。
+2. 關閉遊戲後解壓縮，將 `natives` 資料夾複製到 `MonsterHunterWilds.exe` 所在的遊戲目錄。首次安裝會新增這些檔案，更新時則覆蓋本模組舊版的檔案。
 3. 安裝 [REFramework](https://github.com/praydog/REFramework) 後啟動遊戲。如果 **Loose File Loader** 尚未開啟，請啟用它並重新啟動遊戲。
 
 切換底座與掌機模式時，用另一個安裝包重複上述步驟。如果安裝過本模組使用 Lua 的舊版，請移除遊戲目錄中的舊指令碼 `reframework/autorun/MHWS_NSW2onPC.lua`。

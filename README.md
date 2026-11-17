@@ -33,8 +33,8 @@ Choose one package. Both are based on Steam version `1.42.0.3` of Monster Hunter
 
 ## Install
 
-1. Close the game and download the ZIP for your preferred preset.
-2. Extract the ZIP and copy its `natives` folder into the game directory next to `MonsterHunterWilds.exe`. Allow it to replace files from the previous version of this mod.
+1. Download either the Dock or Handheld ZIP.
+2. With the game closed, extract the ZIP and copy its `natives` folder into the game directory next to `MonsterHunterWilds.exe`. Allow it to replace files from the previous version of this mod.
 3. Launch the game with [REFramework](https://github.com/praydog/REFramework) installed. If **Loose File Loader** is off, enable it and restart the game.
 
 To switch between Dock and Handheld, repeat these steps with the other package. If you previously installed a version of this mod that used Lua, remove its old `reframework/autorun/MHWS_NSW2onPC.lua` from the game directory.
