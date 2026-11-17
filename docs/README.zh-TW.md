@@ -11,6 +11,15 @@
   <a href="../README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <strong>繁體中文</strong>
 </p>
 
+<div align="center">
+  <a href="https://github.com/dzxrly/PyREUser3">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/dzxrly/PyREUser3/branding/powered-by-pyreuser3-simple-dark.svg">
+      <img alt="Powered by PyREUser3" src="https://raw.githubusercontent.com/dzxrly/PyREUser3/branding/powered-by-pyreuser3-simple-light.svg">
+    </picture>
+  </a>
+</div>
+
 ## 下載
 
 兩個安裝包皆以 Steam 版《魔物獵人 荒野》`1.42.0.3` 的遊戲資料為基礎。請擇一下載。
@@ -41,12 +50,3 @@
 同一模式下，PC 的五檔畫質預設共用一組模組參數。遊戲保留原本的選單標籤，有多個選項共用參數時，選單可能顯示第一個符合的標籤。掌機版沿用 Switch 2 預設的 `HIGH` 陰影品質。輸出解析度、影格率和可用的超解析度技術由 PC 設定決定。
 
 如果更新或切換模式後仍看到舊設定，請先關閉遊戲，備份 `config.ini` 並將它移出遊戲目錄。重新啟動後，遊戲會產生新的設定檔，解析度等 PC 設定需要重新調整。
-
-<div align="center">
-  <a href="https://github.com/dzxrly/PyREUser3">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/dzxrly/PyREUser3/branding/powered-by-pyreuser3-simple-dark.svg">
-      <img alt="Powered by PyREUser3" src="https://raw.githubusercontent.com/dzxrly/PyREUser3/branding/powered-by-pyreuser3-simple-light.svg">
-    </picture>
-  </a>
-</div>

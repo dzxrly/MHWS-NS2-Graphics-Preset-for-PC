@@ -11,6 +11,15 @@
   <strong>English</strong> · <a href="docs/README.zh-CN.md">简体中文</a> · <a href="docs/README.zh-TW.md">繁體中文</a>
 </p>
 
+<div align="center">
+  <a href="https://github.com/dzxrly/PyREUser3">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/dzxrly/PyREUser3/branding/powered-by-pyreuser3-simple-dark.svg">
+      <img alt="Powered by PyREUser3" src="https://raw.githubusercontent.com/dzxrly/PyREUser3/branding/powered-by-pyreuser3-simple-light.svg">
+    </picture>
+  </a>
+</div>
+
 ## Download
 
 Choose one package. Both are based on Steam version `1.42.0.3` of Monster Hunter Wilds.
@@ -41,12 +50,3 @@ To switch between Dock and Handheld, repeat these steps with the other package. 
 All five PC graphics presets use the same mod settings for the selected mode. The game keeps its original menu labels and may display the first matching label when options share the same values. Handheld still uses the Switch 2 preset's `HIGH` shadow quality. Output resolution, frame rate and the available upscaling methods follow your PC settings.
 
 If some settings from an older install or another mode persist, close the game, back up `config.ini` and move it out of the game directory. The game will create a fresh configuration on launch. Set your PC preferences, such as resolution, again afterward.
-
-<div align="center">
-  <a href="https://github.com/dzxrly/PyREUser3">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/dzxrly/PyREUser3/branding/powered-by-pyreuser3-simple-dark.svg">
-      <img alt="Powered by PyREUser3" src="https://raw.githubusercontent.com/dzxrly/PyREUser3/branding/powered-by-pyreuser3-simple-light.svg">
-    </picture>
-  </a>
-</div>
