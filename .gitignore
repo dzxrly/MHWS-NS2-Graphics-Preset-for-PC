@@ -1,0 +1,18 @@
+# Build output
+/output/
+/.temp/
+
+# Local configuration, analysis and schemas
+/.ai-memory.toml
+/.agents/
+/.codex/
+/.idea/
+/.vscode/
+/data/*.json
+!/data/Enums_Internal.json
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
