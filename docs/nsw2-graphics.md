@@ -52,8 +52,12 @@ Dock 的 `Default_Fast` 使用 DRS 11（`TARGET_40_LOW`），阴影质量从 3 �
 
 ## 两份 MOD 的实现与验证边界
 
-构建时按用途键覆盖 `GraphicsPreset` 的 12 条 PC 行，均使用该包的原始 NSW2 Default。平台与用途键，以及 PC 色彩、升频、帧率和纹理预算字段沿用各行原值。光追子对象和分关卡地形距离随模式复制。菜单的超高、高、中、低、最低五档分别保留档位身份并统一选项载荷。能够精确对应的字段采用原版 PC 选项，升频质量统一为 Balanced，沙雪水、地面和剔除通过各自的独立表同步。纹理使用固定 PC 标准档，方便切换五档时得到同一预算起点，实际预算仍由 PC 根据设备约束。底座体积雾、两种 NSW2 阴影距离等超出菜单取值范围的字段先走共同的原版 PC 最低档选择，再由脚本应用 NSW2 值。游戏重算预设标签时可能显示「自定义」。`GrassCullingSetting` 同步四条 FAR 记录的密度裁剪，`AppStreamingControllerManagerSetting` 交换 PC 与 NSW2 的保护配置键。
+构建时按用途键覆盖 `GraphicsPreset` 的 12 条 PC 行，均使用该包的原始 NSW2 Default。平台与用途键，以及 PC 色彩、升频、帧率和纹理预算字段沿用各行原值。光追子对象和分关卡地形距离随模式复制。五档菜单保留各自的 `_Quality` 身份并采用同一组选项。`OptionGraphicsData` 保留各条目的 `_Option`，实际载荷改为对应模式的数据。PC 纹理菜单继续使用原版预算档位，五档起点取标准档。升频质量统一为 Balanced。`GrassCullingSetting` 同步四条 FAR 记录的密度裁剪，`AppStreamingControllerManagerSetting` 交换 PC 与 NSW2 的保护配置键。
 
-原版 `applyGraphicsPresetSetting` 先排队，`onGraphicsPresetSettingsTypeChanged`（RVA `0x5d1fae0`）也会给过场预设排队。`updateRequests()`（RVA `0x5d1eb00`）执行选项，然后进入 `updateGraphicsSettings()` 完成提交。脚本在保存设置载入后的第一轮，以及设置画质预设后的排队阶段完成后，安排一次 `UpdateBehavior` 调用。逻辑使用精确重载 `copyGraphicsSettingPreset(app.cAppGraphicsSetting,ace.cGraphicsSetting.PLATFORM,app.GraphicsSettingUsage.TYPE_Fixed)`（RVA `0x608cee0`）复制所选原始条目、带回当前 PC 显示与纹理预算字段，再用 `setGraphicsSettingInGame(ace.cGraphicsSetting)`（RVA `0x608c070`）应用。编辑工作区或显示切换期间延后提交，应用后回读阴影、网格和间接光等字段。这个回读检查画质对象，最终像素还受渲染分支控制。[REFramework 更新回调](https://cursey.github.io/reframework-book/api/re.html) [REFramework 钩子接口](https://cursey.github.io/reframework-book/api/sdk.html#sdkhookmethod_definition-pre_function-post_function-ignore_jmp)
+PC 的阴影距离应用函数（RVA `0x758be50`）按菜单索引读取 `_Value`，可直接写入 Dock 的 `NEAREST` 或 Handheld 的 `NEAREST_H`。体积雾应用函数（RVA `0x40ef3a0`）直接写入目标体积纹理尺寸、阴影混合和材质降噪三项。网格菜单（RVA `0x6340860`）把同一个 `_Value` 写入网格和 meshlet 的最低 LOD，两种模式都设为 `0`。这些字段随后仍经过 PC 的场景与渲染限制，例如体积雾的独立尺寸上限。
+
+普通和过场预设由 `applyGraphicsPresetSetting` 与 `onGraphicsPresetSettingsTypeChanged`（RVA `0x5d1fae0`）排队，经 `updateRequests`（RVA `0x5d1eb00`）提交。直接布尔项如屏幕空间反射、皮肤次表面散射和景深由预设表选择开关。对多个条目共享同一实际载荷的选项，部分菜单回读会选择首个匹配标签。
+
+启动时 `initializeGraphicsSettingPC`（RVA `0x608a6e0`）会读取 Windows 本地设置。`doReadConfig`（RVA `0x7bdc450`）能直接恢复已保存的雾、反射、运动模糊和阴影值。普通预设只提交发生变化的菜单项。检查预设初始化效果时，应以备份并重建的 PC 配置为起点，并分别验证从已有配置升级时的行为。
 
 要与 NSW2 试玩版或正式版核对，仍需对应版本的画质预设、显示控制和流送资源，以及主机、掌机在同一场景同一镜头下的帧捕获。确定输出同步和平台资源分支需要该版本的类型信息或匹配的反汇编数据。

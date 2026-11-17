@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .repack import JsonDict
+from .repack import JsonDict, instances
 
 
 def verify_rebuilt(expected: JsonDict, rebuilt: JsonDict) -> None:
@@ -16,3 +16,17 @@ def verify_rebuilt(expected: JsonDict, rebuilt: JsonDict) -> None:
         raise ValueError(
             f"repacked USER/RSZ document differs in: {', '.join(sorted(keys))}"
         )
+
+
+def verify_option_identities(original: JsonDict, rebuilt: JsonDict) -> None:
+    identities = []
+    for data in (original, rebuilt):
+        identities.append(
+            {
+                index: entry["fields"]["_Option"]
+                for index, entry in instances(data=data).items()
+                if "_Option" in entry.get("fields", {})
+            },
+        )
+    if identities[0] != identities[1]:
+        raise ValueError("OptionGraphicsData _Option identities changed")

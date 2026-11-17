@@ -1,11 +1,11 @@
 # MHWS NS2 Graphics Preset for PC
 
-MHWS NS2 Graphics Preset for PC 是《怪物猎人 荒野》的画质 MOD，用于在 PC 平台上启用 Nintendo Switch 2（NS2）平台的画面预设。项目基于 Steam `1.42.0.3` 的游戏数据，分别提供主机版 **Dock** 和掌机版 **Handheld**，对应游戏内的 `NSW2` 和 `NSW2_HANDHELD`。
+MHWS NS2 Graphics Preset for PC 是《怪物猎人 荒野》的 `user.3` 画质补丁，用于在 PC 平台上启用 Nintendo Switch 2（NS2）平台的画面预设。项目基于 Steam `1.42.0.3` 的游戏数据，分别提供主机版 **Dock** 和掌机版 **Handheld**，对应游戏内的 `NSW2` 和 `NSW2_HANDHELD`。
 
 ## 静态 LOD 与 Streaming 策略
 
 - 以本包对应的 NSW2 `Default` 条目为模板覆盖全部 12 条 PC 用途记录，保留各行的平台、用途、色彩、升频、帧率和纹理预算字段。
-- 同步 PC 菜单从超高到最低的五档选项。可匹配的字段采用原版 PC 对应选项，例如云使用 `SIMPLIFIED`，网格使用 `STANDARD`。五档共用 PC 标准纹理档和 Balanced 升频质量。
+- 同步 PC 菜单从超高到最低的五档选项，并按所选 NS2 模式改写对应菜单项的实际参数。`_Option` 标识、显示文本和条目顺序沿用原版。网格菜单写入 NS2 的网格与 meshlet 最低 LOD 值 `0 / 0`。五档共用 PC 标准纹理档和 Balanced 升频质量。
 - 使用 NSW2 流送保护配置。距离 10 的近圈保护 mip 1／LOD 1，普通游玩的距离 20 和事件播放的距离 30 保护 mip 2／LOD 2。
 - 同步通用和 `ST101`、`ST102`、`ST103` 的四条草地 `FAR` 记录。全局密度、近端和远端裁剪分别为 `1.0 / 10.0 / 100.0`。
 - 五档共用沙雪水最低档这一组组件配置。`ST101` 至 `ST105` 的两级地形距离同步为 `120.0 / 90.0`，其余没有 NSW2 对应值的组件参数取原版 PC 沙雪水最低档。
@@ -28,9 +28,11 @@ Dock 的原生 `Default` 开启屏幕空间反射和皮肤次表面散射。Hand
 
 ## 安装
 
-从 GitHub Releases 选择 `MHWS_NS2_Graphics_Preset_for_PC_Dock_<version>.zip` 或 `MHWS_NS2_Graphics_Preset_for_PC_Handheld_<version>.zip`。本地构建的压缩包位于 `output/`。将解压出的 `natives` 和 `reframework` 目录放入游戏根目录，并在 REFramework 中开启 **Loose File Loader**。切换模式时用另一份覆盖，重启游戏。[GitHub Releases](https://github.com/dzxrly/MHWS-NS2-Graphics-Preset-for-PC/releases)
+从 GitHub Releases 选择 `MHWS_NS2_Graphics_Preset_for_PC_Dock_<version>.zip` 或 `MHWS_NS2_Graphics_Preset_for_PC_Handheld_<version>.zip`。本地构建的压缩包位于 `output/`。将解压出的 `natives` 目录放入游戏根目录，并在 REFramework 中开启 **Loose File Loader**。切换模式时用另一份覆盖，重启游戏。[GitHub Releases](https://github.com/dzxrly/MHWS-NS2-Graphics-Preset-for-PC/releases)
 
-游戏载入保存的设置后会自动应用对应模式。切换普通或过场画质预设时，脚本会在菜单提交后重新应用。游戏有时会将超出原生菜单取值范围的配置显示为「自定义」。要手动应用，可在 REFramework 面板展开 **MHWS NS2 Graphics Preset for PC**，点击 **Apply Dock profile** 或 **Apply Handheld profile**。
+从带 Lua 的旧版升级时，先卸载旧包，并移除游戏目录里旧版的 `reframework/autorun/MHWS_NSW2onPC.lua`。安装后可在游戏菜单选择普通或过场画质预设。多个菜单标签指向同一画质参数时，游戏回读可能显示该组第一个匹配的标签。
+
+Windows 会从已有的 `config.ini` 读取部分原始画质字段，切换菜单预设也只会提交发生变化的选项。若从旧版升级或切换主机、掌机后仍看到旧设置，可先退出游戏，将 `config.ini` 备份并移出游戏目录，再启动游戏生成新配置。原有的分辨率等 PC 选项需要重新设置。
 
 每份压缩包包含以下文件。
 
@@ -39,7 +41,6 @@ Dock 的原生 `Default` 开启屏幕空间反射和皮肤次表面散射。Hand
 - `natives/STM/GameDesign/Common/Option/OptionGraphicsPresetData.user.3`
 - `natives/STM/System/SystemSetting/AppStreamingControllerManagerSetting.user.3`
 - `natives/STM/System/SystemSetting/GrassCullingSetting.user.3`
-- `reframework/autorun/MHWS_NSW2onPC.lua`
 - `modinfo.ini`
 
 ## 本地构建
@@ -99,11 +100,11 @@ python tools/build_data.py download
 - `utils/patches.py` 修改五个构建资源，维护 PC 菜单目标值。
 - `utils/repack.py` 访问 PyREUser3 的实例表和对象引用。
 - `utils/verify.py` 比较编辑后的目标数据与重打包后重新读取的数据。
-- `utils/package.py` 生成 `modinfo.ini`、Lua 脚本和 ZIP。
+- `utils/package.py` 生成 `modinfo.ini` 和 ZIP。
 - `utils/enums.py` 读取 `data/Enums_Internal.json` 并解析枚举身份。
 - `tools/build_data.py` 管理 GitHub Release 中的大体积构建数据。
 - `data/natives/STM/` 按游戏相对路径保存原始 `user.3`。
-- `assets/` 保存运行时 Lua 和 `modinfo.ini` 模板。
+- `assets/` 保存 `modinfo.ini` 模板。
 - `docs/` 保存[原始参数表](docs/settings-tables.md)和[平台资源对照](docs/platform-resources.md)。
 
 ## AI Agent 修改索引
@@ -118,9 +119,9 @@ python tools/build_data.py download
 
 ### `OptionGraphicsData.user.3`
 
-源文件为 `data/natives/STM/GameDesign/Common/Option/OptionGraphicsData.user.3`。根类型为 `OptionGraphicsData`，由 `utils.patches.patch_terrain_option()` 处理。
+源文件为 `data/natives/STM/GameDesign/Common/Option/OptionGraphicsData.user.3`。根类型为 `OptionGraphicsData`，由 `utils.patches.patch_option_graphics()` 处理。
 
-只定位沙雪水的 `LOWEST` 项，并同步地形分块细节开关及 `ST101` 至 `ST105` 的距离。无关卡匹配时仍使用 `INVALID` 行的原始 `180/128`。
+同步阴影距离、体积雾、网格、云、植被、环境光、Bloom 和光追等选项的实际载荷，保留各行的 `_Option`、顺序和引用。沙雪水各档使用原版 PC 最低档组件参数，并同步地形分块细节开关及 `ST101` 至 `ST105` 的距离。无关卡匹配时使用 `INVALID` 行的 `180/128`。
 
 ### `OptionGraphicsPresetData.user.3`
 
@@ -144,14 +145,11 @@ python tools/build_data.py download
 
 这两份源文件用于分析。植被管理器引用草地和苔藓资源，苔藓按关卡读取起始距离、动画距离与缩放。引用与平台分支见[平台资源对照](docs/platform-resources.md)。
 
-### `MHWS_NSW2onPC.lua`
-
-源模板为 `assets/apply_profile.lua`。脚本等待原生选项请求处理结束，再通过游戏画质入口应用对应模式。启动、普通预设和过场预设各有触发路径。显示切换或编辑画质期间会延后应用。
-
 ## 修改与验证不变量
 
 - 两种模式分别取原始的 NSW2 `Default` 和 `NSW2_HANDHELD` `Default`。12 条 PC 用途保留各自身份，其他平台和共享根表保留原始值。
 - 过场及普通菜单的五档共用同一套菜单载荷。每张表的五个 `_Quality` 仍各自唯一。
 - 草地按 `FAR` 匹配一条通用记录和三条关卡记录。沙雪水按关卡身份匹配五条地形距离。
-- 默认生成两个 ZIP。每包包含五个回封后重新读验的 `user.3`、一个 Lua 脚本和一个 `modinfo.ini`。构建日志位于 `output/output.log`。
-- 修改构建或目标参数后运行 `python main.py`，检查两个包、资源回读及构建日志。Lua 的启动和菜单提交时序已有模拟检查，实际游戏内的画面与帧率仍需实测。
+- 回封后核对所有 `OptionGraphicsData._Option` 标识，逐项与源文件一致。
+- 默认生成两个 ZIP。每包包含五个回封后重新读验的 `user.3` 和一个 `modinfo.ini`。构建日志位于 `output/output.log`。
+- 修改构建或目标参数后运行 `python main.py`，检查两个包、资源回读及构建日志。实际游戏内的画面与帧率仍需实测。

@@ -14,25 +14,6 @@ from .repack import (
     root_instance,
 )
 
-# These option indices have matching NSW2 payloads in the stock OptionGraphicsData.
-PC_MENU_OPTIONS = {
-    "_AntiAliasing": "[1] TAA",
-    "_TextureFilter": "[3] ANISOTROPIC2",
-    "_MeshQuality": "[2] STANDARD",
-    "_SkyCloudQuality": "[5] SIMPLIFIED",
-    "_PlantQuality": "[2] LOW",
-    "_PlantDensity": "[0] HIGH",
-    "_PlantCollision": "[0] ON",
-    "_ShadowQuality": "[1] HIGH",
-    "_ContactShadow": "[0] ON",
-    "_AmbientOcclusion": "[1] STANDARD",
-    "_DepthOfField": "[0] ON",
-    "_VariableRateShading": "[0] OFF",
-    "_FurQuality": "[1] LOW",
-    "_WindFluidSimulation": "[2] OFF",
-    "_WaterFluidEffect": "[1] DISABLE",
-    "_AmbientLight": "[2] LOW",
-}
 PC_TERRAIN_OPTION = "[4] LOWEST"
 
 
@@ -122,29 +103,30 @@ def patch_graphics_preset(
     return [usage for usage in usages if usage is not None]
 
 
-def patch_option_presets(data: JsonDict, profile: JsonDict) -> None:
+def patch_option_presets(
+    data: JsonDict,
+    profile: JsonDict,
+    menu_options: dict[str, str],
+) -> None:
     root = root_instance(data=data, class_suffix="OptionGraphicsPresetData")["fields"]
     lowest = next(
         row
         for row in iter_ref_fields(data=data, refs=root["_Settings"])
         if enum_int(value=row["_Quality"]) == 4
     )
-    # Keep one stock fallback for PC selectors that cannot express the NSW2
-    # payload. The live profile supplies the NSW2 values after the menu commit.
     settings = {
         **{
             name: fields(data=data, ref=ref)["_Value"]
             for name, ref in lowest.items()
             if name != "_Quality"
         },
-        **PC_MENU_OPTIONS,
+        **{name: choice for name, choice in menu_options.items() if name in lowest},
         # PC needs an explicit tier. STANDARD uses the middle 1024 texture cap.
         "_TextureQuality": "[2] STANDARD",
         "_ScreenSpaceReflection": "[0] ON" if profile["_SSR_Enable"] else "[1] OFF",
         "_SsssScattering": "[0] ON" if profile["_SSSSS_Enable"] else "[1] OFF",
+        "_DepthOfField": "[0] ON" if profile["_DOF_Enable"] else "[1] OFF",
     }
-    if enum_int(value=profile["_VolumetricFogControl_TextureSize"]) == 4:
-        settings["_VolumeFogQuality"] = "[4] LOWEST"
 
     for table in (
         "_Settings",
@@ -164,12 +146,12 @@ def patch_option_presets(data: JsonDict, profile: JsonDict) -> None:
                 for name, value in settings.items():
                     fields(data=data, ref=row[name])["_Value"] = value
             elif table == "_GroundQuality":
-                row["_Value"] = profile["_GroundQuality"]
+                row["_Value"] = menu_options["_GroundQuality"]
             elif table == "_UpscaleMode":
                 # PC's menu enum has a different value for Balanced from the engine enum.
                 row["_Value"] = "[2] BALANCED"
             elif table == "_SandSnowWaterQuality":
-                row["_Value"] = PC_TERRAIN_OPTION
+                row["_Value"] = menu_options["_SandSnowWaterQuality"]
             else:
                 resolution = profile["_SmallObjectCullingResolution"]
                 row["_Value"] = profile["_MeshCullingSetting"]
@@ -179,30 +161,179 @@ def patch_option_presets(data: JsonDict, profile: JsonDict) -> None:
                 )
 
 
-def patch_terrain_option(data: JsonDict, graphics: JsonDict, profile: JsonDict) -> None:
+def patch_option_graphics(
+    data: JsonDict,
+    graphics: JsonDict,
+    profile: JsonDict,
+    enums: EnumLookup,
+) -> dict[str, str]:
     root = root_instance(data=data, class_suffix="OptionGraphicsData")["fields"]
-    options = fields(data=data, ref=root["_SandSnowWaterQuality"])["_Items"]
-    terrain = next(
-        entry
-        for entry in iter_ref_fields(data=data, refs=options)
-        if entry["_Option"] == PC_TERRAIN_OPTION
-    )
-    stage_array = "_GroundSwitchLodDistanceArray"
-    stages = {
-        row["_StageID_Fixed"]: row
-        for row in iter_ref_fields(data=graphics, refs=profile[stage_array])
+    render_quality = "via.render.RenderConfig.Quality"
+    ray_tracing = fields(data=graphics, ref=profile["_RayTracing"])
+    experimental_rt = fields(data=graphics, ref=profile["_ExperimentalRayTrace"])
+    mesh_lod = profile["_StreamingMeshMinimumLOD"]
+    if mesh_lod != profile["_StreamingMeshletMinimumLOD"]:
+        raise ValueError("the PC mesh option takes one value for mesh and meshlet LOD")
+    targets = {
+        "_AntiAliasing": {
+            "_Value": enums.label(
+                enum_type="via.render.RenderConfig.AntiAliasingType",
+                value=profile["_AntiAliasing"],
+            ),
+        },
+        "_RayTracing": {
+            "_Enable": ray_tracing["_Enable"],
+            "_Quality": enums.label(
+                enum_type=render_quality, value=ray_tracing["_Quality"]
+            ),
+            "_RayTracingResRatio": experimental_rt["_RayTracingResRatio"],
+        },
+        "_TextureFiltering": {
+            "_Value": enums.label(
+                enum_type="via.render.SamplerQuality",
+                value=profile["_SamplerQuality"],
+            ),
+        },
+        "_MeshQuality": {"_Value": mesh_lod},
+        "_SkyCloudQuality": {
+            name: profile[name]
+            for name in (
+                "_MainRaymarchResolution",
+                "_IBLRaymarchResolution",
+                "_IBLRaymarchScale",
+                "_IBLPartialDrawFrame",
+                "_MainRaymarchNum",
+                "_ShadowRaymarchNum",
+                "_ResourceOption",
+                "_UpscaleBoundaryBlendAdjuster",
+            )
+        },
+        "_PlantQuality": {"_Value": profile["_StreamingMeshMinimumLODSpeedTree"]},
+        "_PlantShaking": {
+            "_Leaf": profile["_SpeedTreeWind_Leaf"],
+            "_Branch": profile["_SpeedTreeWind_Branch"],
+            "_Global": profile["_SpeedTreeWind_Global"],
+        },
+        "_PlantDensity": {"_Value": profile["_GrassCullingMode"]},
+        "_PlantCollision": {"_Value": int(not profile["_GrassPushCollision"])},
+        "_ShadowQuality": {
+            "_Value": enums.label(
+                enum_type=render_quality, value=profile["_ShadowQuality"]
+            ),
+        },
+        "_ContactShadow": {
+            "_Value": enums.label(
+                enum_type="via.render.RenderConfig.OptionSetting",
+                value=profile["_ContactShadowSetting"],
+            ),
+        },
+        "_AmbientOcclusion": {
+            "_AOSetting": enums.label(
+                enum_type=render_quality, value=profile["_AOSetting"]
+            ),
+            "_SSAO_HalfResolution": profile["_SSAO_HalfResolution"],
+        },
+        "_Bloom": {
+            "_Enable": profile["_Bloom_Enable"],
+            "_ReductionLevel": profile["_Bloom_ReductionLevel"],
+        },
+        "_VolumeFogQuality": {
+            "_Value": enums.label(
+                enum_type="via.render.VolumetricFogControl.TextureSize",
+                value=profile["_VolumetricFogControl_TextureSize"],
+            ),
+            "_ShadowCullingBlendFactorScale": profile[
+                "_VolumetricFogControl_ShadowCullingBlendFactorScale"
+            ],
+            "_CustomMaterialImproveNoise": profile[
+                "_VolumetricFogControl_CustomMaterialImproveNoise"
+            ],
+        },
+        "_VariableRateShading": {
+            "_Value": enums.label(
+                enum_type="via.render.RenderConfig.VRSType",
+                value=profile["_VRSSetting"],
+            ),
+        },
+        "_FurQuality": {"_Value": profile["_UseLowShellFur"]},
+        "_WindFluidSimulation": {"_Value": profile["_WindSimulationQuality"]},
+        "_GroundQuality": {"_Value": profile["_GroundQuality"]},
+        "_WaterFluidEffect": {"_Value": profile["_UseLowWaterSimulation"]},
+        "_DistantShadow": {"_Value": profile["_UseLowResolutionSDF"]},
+        "_ShadowCastDistance": {
+            "_Value": enums.label(
+                enum_type="ace.cGraphicsSetting.SHADOW_CAST_DISTANCE_TYPE",
+                value=profile["_ShadowCastDistanceType"],
+            ),
+        },
+        "_AmbientLight": {
+            "_Value": enums.label(
+                enum_type="ace.cGraphicsSetting.GI_QUALITY",
+                value=profile["_GIQuality"],
+            ),
+        },
     }
-    terrain["_EnableGroundSwtichLodPerPatch"] = profile[
+    menu_options = {}
+    for group, values in targets.items():
+        items = list(
+            iter_ref_fields(
+                data=data, refs=fields(data=data, ref=root[group])["_Items"]
+            ),
+        )
+        for item in items:
+            missing_fields = values.keys() - item.keys()
+            if missing_fields:
+                raise ValueError(
+                    f"{group} {item['_Option']} is missing {sorted(missing_fields)}"
+                )
+            item.update(values)
+        # The PC getters return the first matching item when payloads coincide.
+        preset_group = "_TextureFilter" if group == "_TextureFiltering" else group
+        menu_options[preset_group] = items[0]["_Option"]
+
+    terrain = list(
+        iter_ref_fields(
+            data=data,
+            refs=fields(data=data, ref=root["_SandSnowWaterQuality"])["_Items"],
+        ),
+    )
+    patch_terrain_options(data=data, graphics=graphics, profile=profile, items=terrain)
+    menu_options["_SandSnowWaterQuality"] = PC_TERRAIN_OPTION
+    return menu_options
+
+
+def patch_terrain_options(
+    data: JsonDict,
+    graphics: JsonDict,
+    profile: JsonDict,
+    items: list[JsonDict],
+) -> None:
+    stage_array = "_GroundSwitchLodDistanceArray"
+    base = next(item for item in items if item["_Option"] == PC_TERRAIN_OPTION)
+    targets = {
+        name: value
+        for name, value in base.items()
+        if name not in ("_Option", stage_array)
+    }
+    targets["_EnableGroundSwtichLodPerPatch"] = profile[
         "_EnableGroundSwtichLodPerPatch"
     ]
-    target_stages = {
-        row["_StageID_Fixed"]: row
-        for row in iter_ref_fields(data=data, refs=terrain[stage_array])
+    stages = {
+        row["_StageID_Fixed"]: (row["_LOD0"], row["_LOD1"])
+        for row in iter_ref_fields(data=data, refs=base[stage_array])
     }
-    for stage, source in stages.items():
-        target = target_stages[stage]
-        target["_LOD0"] = source["_LOD0"]
-        target["_LOD1"] = source["_LOD1"]
+    for row in iter_ref_fields(data=graphics, refs=profile[stage_array]):
+        stages[row["_StageID_Fixed"]] = row["_LOD0"], row["_LOD1"]
+    for item in items:
+        item.update(targets)
+        rows = {
+            row["_StageID_Fixed"]: row
+            for row in iter_ref_fields(data=data, refs=item[stage_array])
+        }
+        if rows.keys() != stages.keys():
+            raise ValueError(f"{item['_Option']} has different terrain stages")
+        for stage, row in rows.items():
+            row["_LOD0"], row["_LOD1"] = stages[stage]
 
 
 def patch_grass_culling(data: JsonDict, profile: JsonDict, enums: EnumLookup) -> int:

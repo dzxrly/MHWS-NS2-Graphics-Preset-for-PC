@@ -76,7 +76,7 @@ Better4KHDTexture 将 4 个通用项和 12 个关卡项的 `_RangeStart` 和 `_R
 
 ## 模组范围与证据缺口
 
-两个包分别将 Dock 或 Handheld 配置映射到 `GraphicsPreset` 的 12 条 PC 记录。`OptionGraphicsPresetData` 同步五个 PC 菜单档位的选项，`OptionGraphicsData` 给五档共用的沙雪水设置提供 NSW2 关卡距离。`AppStreamingControllerManagerSetting` 提供 NSW2 流送保护参数。`GrassCullingSetting` 对齐通用 `FAR` 和三个关卡 `FAR` 行的 `_GlobalDensity`、`_DensityCullingNear`、`_DensityCullingFar`。原有全局密度已经是 `1`，实际变化集中在近远距离。`FoliageManagerSetting` 和 `MossCullingSetting` 的原始文件可用于对照。REFramework 脚本在 PC 菜单排队的修改处理完毕后重新应用所选配置。
+两个包分别将 Dock 或 Handheld 配置映射到 `GraphicsPreset` 的 12 条 PC 记录。`OptionGraphicsPresetData` 同步五个 PC 菜单档位的选项，`OptionGraphicsData` 提供各种选项的实际画质参数和沙雪水的 NSW2 关卡距离。`AppStreamingControllerManagerSetting` 提供 NSW2 流送保护参数。`GrassCullingSetting` 对齐通用 `FAR` 和三个关卡 `FAR` 行的 `_GlobalDensity`、`_DensityCullingNear`、`_DensityCullingFar`。原有全局密度已经是 `1`，实际变化集中在近远距离。`FoliageManagerSetting` 和 `MossCullingSetting` 的原始文件可用于对照。游戏通过自身的预设和菜单路径读取这些静态数据。
 
 NPC 处理、生成、布料、毛发、环境光遮蔽、表情细节、对话时序及平台专用网格或材质属于独立的游戏资源或平台分支。现有通用裁剪路径与旧 NSW2 资源的等级集合存在差异，直接覆盖会让当前资源中的 `VILLAGE_Lowest` 条目消失。
 

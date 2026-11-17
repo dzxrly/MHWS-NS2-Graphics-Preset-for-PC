@@ -19,16 +19,16 @@ from . import (
 )
 from .build_log import OutputLog
 from .enums import EnumLookup
-from .package import read_version, write_mod_archive, write_mod_assets
+from .package import read_version, write_mod_archive, write_modinfo
 from .patches import (
     graphics_profile,
     patch_app_streaming,
     patch_graphics_preset,
     patch_grass_culling,
+    patch_option_graphics,
     patch_option_presets,
-    patch_terrain_option,
 )
-from .verify import verify_rebuilt
+from .verify import verify_option_identities, verify_rebuilt
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -123,9 +123,16 @@ def main(argv: list[str] | None = None) -> int:
             pc_usages = patch_graphics_preset(
                 data=variant_graphics, profile=profile, enums=enums
             )
-            patch_option_presets(data=variant_options, profile=profile)
-            patch_terrain_option(
-                data=variant_option_graphics, graphics=variant_graphics, profile=profile
+            menu_options = patch_option_graphics(
+                data=variant_option_graphics,
+                graphics=variant_graphics,
+                profile=profile,
+                enums=enums,
+            )
+            patch_option_presets(
+                data=variant_options,
+                profile=profile,
+                menu_options=menu_options,
             )
             grass_rows = patch_grass_culling(
                 data=variant_grass, profile=profile, enums=enums
@@ -139,6 +146,9 @@ def main(argv: list[str] | None = None) -> int:
                 text="Synchronized all five PC menu tiers, including Balanced upscaling, Standard texture, terrain and culling."
             )
             log.line(
+                text=f"Synchronized render payloads for {len(menu_options)} OptionGraphicsData groups."
+            )
+            log.line(
                 text=f"Synchronized grass density in {grass_rows} {profile['_GrassCullingMode']} rows."
             )
             for member, data in (
@@ -150,17 +160,18 @@ def main(argv: list[str] | None = None) -> int:
                 target = package_dir / member
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(converter.pack(data=data))
-                verify_rebuilt(
-                    expected=data,
-                    rebuilt=converter.parse_pack_file(user3_path=target),
-                )
+                rebuilt = converter.parse_pack_file(user3_path=target)
+                verify_rebuilt(expected=data, rebuilt=rebuilt)
+                if member == OPTION_GRAPHICS:
+                    verify_option_identities(original=option_graphics, rebuilt=rebuilt)
+                    log.line(
+                        text="Verified all original OptionGraphicsData _Option identities."
+                    )
                 log.line(text=f"Verification passed: {member.name}")
-            package_members = write_mod_assets(
+            modinfo = write_modinfo(
                 package_dir=package_dir,
                 assets_dir=assets_dir,
                 variant=variant,
-                platform=platform,
-                usage=usage,
                 version=version,
             )
             archive = write_mod_archive(
@@ -172,7 +183,7 @@ def main(argv: list[str] | None = None) -> int:
                     OPTION_GRAPHICS,
                     GRASS_CULLING,
                     APP_STREAMING,
-                    *package_members,
+                    modinfo,
                 ),
                 variant=variant,
                 version=version,

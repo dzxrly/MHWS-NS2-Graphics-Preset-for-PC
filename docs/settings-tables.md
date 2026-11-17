@@ -703,7 +703,7 @@
 | `_SandSnowWaterQuality` | `_Value` `[4] LOWEST` |
 | `_CullingSettings` | `_Value` `[3] LOW` / `_SmallObjectCulling` `8.0` / `_MPMRSmallObjectCullingResolution` `[720] MPMRSmallObjectCullingResolution_720p` |
 
-菜单载荷的值适用于选择该项的现有档位或自定义配置。例如天空/云 `[3] LOW` 使用五分之一分辨率进行主光线步进，两份 NSW2 Default 使用八分之一。草地密度 `[3] LOWEST` 对应 `NEAREST`，两份 NSW2 Default 均为 `FAR`。地面、沙雪水和剔除独立表分别提供每个预设自己的行。
+上表记录原版 PC 的最低档菜单。天空/云 `[3] LOW` 使用五分之一分辨率进行主光线步进，两份 NSW2 Default 使用八分之一。草地密度 `[3] LOWEST` 对应 `NEAREST`，两份 NSW2 Default 均为 `FAR`。网格菜单的整数 `_Value` 同时写入 `_StreamingMeshMinimumLOD` 和 `_StreamingMeshletMinimumLOD`。两个 NSW2 Default 的最低 LOD 均为 `0 / 0`，独立的 `_MeshQuality=2` 来自原生预设。地面、沙雪水和剔除独立表分别提供每个预设自己的行。
 
 本地 2026-10-27 的 `MonsterHunterWilds_dump.exe` 和 `il2cpp_dump.json` 给出了菜单应用路径。`app.cGUISystemModuleOption.applyGraphicsPresetSetting` 位于 `0x145D1E230`。该函数取对象 `+0x48` 的 `_OptionGraphicsPresetData`，再读取资源对象 `+0x20` 的 `_Settings`，按画质枚举取行。它遍历该行的选项数组，对 `setOptionValue`（`0x145A1E390`）确认发生变化的条目调用 `applySetting`（`0x145D1D260`）。这条路径解释了为什么总体预设可以重新应用独立的菜单项。
 

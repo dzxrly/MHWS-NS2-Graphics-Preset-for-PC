@@ -34,6 +34,12 @@ class EnumLookup:
         except KeyError as exc:
             raise KeyError(f"enum member not found: {enum_type}.{member}") from exc
 
+    def label(self, enum_type: str, value: int) -> str:
+        for member, candidate in self._data[enum_type].items():
+            if candidate == value:
+                return f"[{value}] {member}"
+        raise KeyError(f"enum value not found: {enum_type}={value}")
+
 
 def enum_int(value: Any) -> int | None:
     """Read raw ints or PyREUser3 labels such as ``[5] PC``."""
